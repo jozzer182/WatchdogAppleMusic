@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">AppleMusic Watchdog</string>
+    <string name="info_text">Esta app vigila el estado de reproducción de Apple Music.\n\nSi detecta que la música se detiene o pausa, intentará reanudar automáticamente la reproducción cada 60 segundos.\n\nPara que funcione correctamente, debes habilitar el acceso a notificaciones para esta app en los ajustes del sistema.</string>
+    <string name="btn_open_settings">Abrir Ajustes de Acceso a Notificaciones</string>
+</resources>

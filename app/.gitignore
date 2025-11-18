@@ -1,1 +1,7 @@
 /build
+
+# Excepción: permitir que el APK debug se suba a GitHub
+!/build/outputs/
+!/build/outputs/apk/
+!/build/outputs/apk/debug/
+!/build/outputs/apk/debug/*.apk

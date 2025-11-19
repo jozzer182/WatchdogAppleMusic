@@ -1,0 +1,55 @@
+<!-- Icono personalizado: Nota musical con protección watchdog -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Fondo circular degradado -->
+    <path
+        android:fillColor="#1976D2"
+        android:pathData="M0,0h108v108h-108z"/>
+    
+    <path
+        android:fillColor="#0D47A1"
+        android:pathData="M54,54m-50,0a50,50 0,1 1,100 0a50,50 0,1 1,-100 0"/>
+    
+    <!-- Nota musical principal blanca -->
+    <path
+        android:fillColor="#FFF"
+        android:pathData="M65,25 L65,70 Q65,75 60,75 Q55,75 55,70 Q55,65 60,65 Q65,65 65,60 L65,35 L78,32 L78,57 Q78,62 73,62 Q68,62 68,57 Q68,52 73,52 Q78,52 78,47 L78,25 Z"/>
+    
+    <!-- Nota pequeña -->
+    <path
+        android:fillColor="#E3F2FD"
+        android:pathData="M45,35 L45,55 Q45,58 42,58 Q39,58 39,55 Q39,52 42,52 Q45,52 45,50 L45,35 Z"/>
+    
+    <!-- Círculo de protección -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#FFD54F"
+        android:strokeWidth="3"
+        android:pathData="M54,54 m-35,0 a35,35 0,1 1,70 0 a35,35 0,1 1,-70 0"/>
+    
+    <!-- Ondas de sonido amarillas -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#FFD54F"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M25,45 Q20,54 25,63"/>
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#FFD54F"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M83,45 Q88,54 83,63"/>
+    
+    <!-- Símbolo watchdog (ojo vigilante) -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M54,80 m-4,0 a4,4 0,1 1,8 0 a4,4 0,1 1,-8 0"/>
+    <path
+        android:fillColor="#0D47A1"
+        android:pathData="M54,80 m-2,0 a2,2 0,1 1,4 0 a2,2 0,1 1,-4 0"/>
+</vector>

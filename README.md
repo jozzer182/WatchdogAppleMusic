@@ -33,7 +33,7 @@ Esto interrumpe la experiencia de escucha continua, especialmente frustrante cua
 3. **Acción automática**:
    - Si está pausada/detenida → Envía comando de reproducción (`play()`)
    - Si no hay sesión activa → Lanza la aplicación de Apple Music
-4. **Refresh profundo automático cada 15 minutos**: 
+4. **Refresh profundo automático cada 15 minutos**:
    - ⏸️ Pausa la reproducción actual
    - ⏭️ Salta a la siguiente canción
    - ▶️ Reanuda la reproducción
@@ -93,6 +93,7 @@ app/build/outputs/apk/release/app-release.apk
 1. **Instala la aplicación** en tu dispositivo Android
 
 2. **Abre AppleMusic Watchdog** - verás una interfaz con:
+
    - 📊 Card azul con countdown hasta el próximo refresh
    - 🟣 Botón morado: "Abrir Ajustes de Acceso a Notificaciones"
    - 🟠 Botón naranja: "Desactivar Optimización de Batería"
@@ -100,6 +101,7 @@ app/build/outputs/apk/release/app-release.apk
    - 🟢 Botón verde: "🔄 Probar Refresh Ahora"
 
 3. **Habilita el acceso a notificaciones** (PASO CRÍTICO):
+
    - Pulsa el botón morado "Abrir Ajustes de Acceso a Notificaciones"
    - Busca "AppleMusic Watchdog" en la lista
    - Activa el interruptor
@@ -107,6 +109,7 @@ app/build/outputs/apk/release/app-release.apk
    - ✅ Verás el countdown aparecer en la app
 
 4. **Desactiva la optimización de batería** (MUY IMPORTANTE):
+
    - Pulsa el botón naranja "Desactivar Optimización de Batería"
    - Se abrirá directamente el diálogo de solicitud o la lista de apps
    - Busca "AppleMusic Watchdog" si es necesario
@@ -114,11 +117,13 @@ app/build/outputs/apk/release/app-release.apk
    - Esto evita que Android mate el servicio para ahorrar batería
 
 5. **Permite notificaciones** (Android 13+):
+
    - Pulsa el botón azul "Permitir Notificaciones"
    - Acepta el permiso cuando se solicite
    - Necesario para mostrar la notificación foreground
 
 6. **Prueba el refresh manual** (Opcional):
+
    - Pulsa el botón verde "🔄 Probar Refresh Ahora"
    - Verás Toast messages mostrando cada paso:
      - 🔍 "Buscando Apple Music..."
@@ -128,6 +133,7 @@ app/build/outputs/apk/release/app-release.apk
      - ✅ "Refresh completado exitosamente"
 
 7. **Revisa la notificación**:
+
    - Desliza la barra de notificaciones
    - Verás "AppleMusic Watchdog Activo"
    - El icono muestra los **minutos restantes** hasta el próximo refresh
@@ -163,11 +169,12 @@ cd WatchdogMusic
 
 ## 📱 Uso
 
-Una vez configurada, la aplicación funciona completamente en segundo plano. 
+Una vez configurada, la aplicación funciona completamente en segundo plano.
 
 ### Características de la UI
 
 **Pantalla Principal:**
+
 - 📊 **Card de Countdown**: Muestra en tiempo real cuánto falta para el próximo refresh profundo (formato MM:SS)
 - 🟣 **Botón Morado**: Acceso rápido a ajustes de notificaciones del sistema
 - 🟠 **Botón Naranja**: Desactivar optimización de batería (con múltiples fallbacks para Android 14+)
@@ -175,6 +182,7 @@ Una vez configurada, la aplicación funciona completamente en segundo plano.
 - 🟢 **Botón Verde**: Ejecutar refresh manual inmediato con feedback visual
 
 **Notificación Persistente:**
+
 - 🔢 **Icono Dinámico**: Círculo blanco con número mostrando minutos restantes (actualizado cada minuto)
 - ⏱️ **Texto Principal**: "Próximo refresh en: MM:SS" (actualizado cada segundo)
 - 📝 **Subtexto**: Último estado ejecutado (ej: "✅ Refresh completado exitosamente", "Vigilando Apple Music")
@@ -183,6 +191,7 @@ Una vez configurada, la aplicación funciona completamente en segundo plano.
 ### Feedback Visual en Tiempo Real
 
 Cuando ejecutas un refresh manual o automático, verás Toast messages mostrando:
+
 - 🔍 "Buscando Apple Music..."
 - ⏸️ "Pausando..."
 - ⏭️ "Siguiente canción..."
@@ -202,6 +211,7 @@ adb logcat -s MediaWatchdogService:D
 Verás mensajes como:
 
 **Vigilancia regular (cada 60s):**
+
 - `Verificando estado de Apple Music...`
 - `Apple Music ya está reproduciendo - no se requiere acción`
 - `Apple Music está pausado - intentando reanudar`
@@ -209,6 +219,7 @@ Verás mensajes como:
 - `No se encontró sesión activa de Apple Music`
 
 **Refresh profundo (cada 15min o manual):**
+
 - `=== INICIANDO REFRESH PROFUNDO (cada 15 min) ===`
 - `🔍 Buscando Apple Music...`
 - `Paso 1: Pausando Apple Music`
@@ -221,6 +232,7 @@ Verás mensajes como:
 - `✅ Refresh completado exitosamente`
 
 **Optimización de memoria:**
+
 - `=== OPTIMIZANDO MEMORIA ===`
 - `Memoria total: XXXXmb`
 - `Memoria disponible: XXXXmb`
@@ -237,6 +249,7 @@ Verás mensajes como:
 - `=== OPTIMIZACIÓN COMPLETADA ===`
 
 **Countdown y notificaciones:**
+
 - `Countdown actualizado: XXX segundos restantes`
 - `Countdown broadcast enviado: XXX segundos restantes`
 
@@ -272,11 +285,13 @@ app/src/main/
 #### MediaWatchdogService (NotificationListenerService)
 
 **3 Loops principales:**
+
 1. **checkRunnable**: Verifica estado cada 60s
 2. **refreshRunnable**: Ejecuta refresh profundo + optimización cada 15min
 3. **countdownUpdateRunnable**: Actualiza countdown y notificación cada 1s
 
 **Funciones clave:**
+
 - `checkAppleMusic()`: Monitoreo del estado de reproducción
 - `handleAppleMusicSession()`: Manejo de 11 estados diferentes de PlaybackState
 - `performDeepRefresh()`: Secuencia pause → skipToNext → play con broadcasts
@@ -288,6 +303,7 @@ app/src/main/
 - `onStartCommand()`: Maneja comando de refresh manual
 
 **Características técnicas:**
+
 - Foreground service con notificación actualizable
 - Handler/Looper para operaciones asíncronas
 - MediaSessionManager para acceso a sesiones de medios
@@ -366,6 +382,7 @@ La app requiere los siguientes permisos:
 ### El botón naranja (batería) no hace nada
 
 En Android 14+ hay múltiples métodos de fallback:
+
 1. Primer intento: Diálogo directo de solicitud
 2. Si falla: Lista general de optimización de batería
 3. Si falla: Ajustes de la app

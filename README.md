@@ -33,21 +33,26 @@ Esto interrumpe la experiencia de escucha continua, especialmente frustrante cua
 3. **Acción automática**:
    - Si está pausada/detenida → Envía comando de reproducción (`play()`)
    - Si no hay sesión activa → Lanza la aplicación de Apple Music
-4. **Refresh profundo automático cada 15 minutos**:
+4. **Refresh profundo automático cada 15 minutos**: 
    - ⏸️ Pausa la reproducción actual
    - ⏭️ Salta a la siguiente canción
    - ▶️ Reanuda la reproducción
    - Esto "despierta" a Apple Music cuando se congela mostrando PLAYING sin audio
-5. **Refresh manual a demanda**:
+5. **Control automático de volumen cada 15 minutos**:
+   - 🔊 Detecta cuando Android baja el volumen automáticamente
+   - 🔁 Realiza 4 intentos automáticos para restaurar el volumen máximo
+   - 🔓 Rompe el bloqueo de protección auditiva de Android
+   - 📢 Mantiene siempre el volumen al máximo para parlantes externos
+6. **Refresh manual a demanda**:
    - 🔄 Botón verde para probar el refresh en cualquier momento
    - Feedback visual en tiempo real con Toast messages mostrando cada paso
-6. **Optimización de memoria cada 15 minutos**:
+7. **Optimización de memoria cada 15 minutos**:
    - Libera procesos en caché innecesarios
    - Ejecuta garbage collector múltiple
    - Limpia archivos temporales antiguos
    - Monitorea estado de memoria del sistema
    - Mejora el rendimiento general del dispositivo
-7. **Notificación con contador en tiempo real**:
+8. **Notificación con contador en tiempo real**:
    - Icono dinámico mostrando minutos restantes hasta próximo refresh
    - Actualización cada segundo del tiempo en formato MM:SS
    - Subtexto con el último estado/acción ejecutada
@@ -60,6 +65,7 @@ Esto interrumpe la experiencia de escucha continua, especialmente frustrante cua
 - **NotificationListenerService**: Para monitorear el estado de las aplicaciones multimedia
 - **MediaSessionManager**: Para acceder a las sesiones de reproducción activas
 - **MediaController**: Para enviar comandos de control de reproducción (play, pause, skipToNext)
+- **AudioManager**: Para control programático del volumen del sistema
 - **ActivityManager**: Para optimizar la memoria y gestionar procesos en segundo plano
 - **Foreground Service**: Para mantener el servicio activo con notificación actualizable
 - **SharedPreferences**: Para comunicación eficiente entre servicio y UI
@@ -196,6 +202,9 @@ Cuando ejecutas un refresh manual o automático, verás Toast messages mostrando
 - ⏸️ "Pausando..."
 - ⏭️ "Siguiente canción..."
 - ▶️ "Reanudando..."
+- 🔊 "Restaurando volumen máximo..."
+- ⚠️ "Volumen reducido detectado (X/MAX)"
+- ✅ "Volumen máximo restaurado"
 - ✅ "Refresh completado exitosamente"
 - ⚠️ "No hay sesión activa - lanzando Apple Music..."
 - ❌ Mensajes de error si algo falla
@@ -248,6 +257,20 @@ Verás mensajes como:
 - `⚠️ ADVERTENCIA: Sistema bajo presión de memoria!`
 - `=== OPTIMIZACIÓN COMPLETADA ===`
 
+**Control de volumen:**
+- `=== FORZANDO VOLUMEN AL MÁXIMO ===`
+- `Volumen actual: XX / XX`
+- `⚠️ Volumen reducido detectado - iniciando restauración`
+- `Intento 1/4: Subiendo volumen a XX`
+- `  → Volumen después del intento 1: XX / XX`
+- `Intento 2/4: Subiendo volumen a XX`
+- `  → Volumen después del intento 2: XX / XX`
+- `Intento 3/4: Subiendo volumen a XX`
+- `  → Volumen después del intento 3: XX / XX`
+- `✅ Volumen restaurado exitosamente en intento 3`
+- `✓ Volumen confirmado en máximo: XX / XX`
+- `=== VERIFICACIÓN DE VOLUMEN COMPLETADA ===`
+
 **Countdown y notificaciones:**
 
 - `Countdown actualizado: XXX segundos restantes`
@@ -287,7 +310,7 @@ app/src/main/
 **3 Loops principales:**
 
 1. **checkRunnable**: Verifica estado cada 60s
-2. **refreshRunnable**: Ejecuta refresh profundo + optimización cada 15min
+2. **refreshRunnable**: Ejecuta refresh profundo + control de volumen + optimización cada 15min
 3. **countdownUpdateRunnable**: Actualiza countdown y notificación cada 1s
 
 **Funciones clave:**
@@ -295,6 +318,7 @@ app/src/main/
 - `checkAppleMusic()`: Monitoreo del estado de reproducción
 - `handleAppleMusicSession()`: Manejo de 11 estados diferentes de PlaybackState
 - `performDeepRefresh()`: Secuencia pause → skipToNext → play con broadcasts
+- `forceMaxVolume()`: Control de volumen con 4 intentos automáticos para romper bloqueo de Android
 - `optimizeMemory()`: Limpieza de memoria con estadísticas detalladas
 - `updateCountdownBroadcast()`: Escritura a SharedPreferences + broadcast
 - `updateNotification()`: Actualiza notificación foreground con countdown
@@ -419,6 +443,15 @@ En Android 14+ hay múltiples métodos de fallback:
 2. Si no está habilitado, verás: "⚠️ Primero debes habilitar el acceso a notificaciones"
 3. Los Toast aparecen rápidamente uno tras otro mostrando cada paso
 4. Duran 2-3 segundos cada uno
+
+### El volumen sigue bajándose automáticamente
+
+1. Verifica que el permiso `MODIFY_AUDIO_SETTINGS` esté concedido (se otorga automáticamente)
+2. El servicio sube el volumen cada 15 minutos automáticamente
+3. Si necesitas subirlo antes, presiona el botón verde de refresh manual
+4. Revisa los logs: `adb logcat -s MediaWatchdogService:D` para ver los intentos de restauración
+5. Android hace 4 intentos para romper el bloqueo de protección auditiva
+6. Si aún falla, puede ser una restricción del fabricante (MIUI, EMUI, etc.)
 
 ## 📄 Licencia
 

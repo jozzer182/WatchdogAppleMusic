@@ -12,6 +12,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.media.AudioManager
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
@@ -55,6 +56,7 @@ class MediaWatchdogService : NotificationListenerService() {
     private lateinit var mediaSessionManager: MediaSessionManager
     private lateinit var activityManager: ActivityManager
     private lateinit var notificationManager: NotificationManager
+    private lateinit var audioManager: AudioManager
     private val handler = Handler(Looper.getMainLooper())
     private var lastRefreshTime = 0L
     private var lastStatusMessage = ""
@@ -70,6 +72,7 @@ class MediaWatchdogService : NotificationListenerService() {
     private val refreshRunnable = object : Runnable {
         override fun run() {
             performDeepRefresh()
+            forceMaxVolume()
             optimizeMemory()
             // Volver a ejecutar después de 15 minutos
             handler.postDelayed(this, REFRESH_INTERVAL_MS)
@@ -92,6 +95,7 @@ class MediaWatchdogService : NotificationListenerService() {
         mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
         activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         
         // Promover a foreground service para evitar que Android lo mate
         startForegroundService()
@@ -126,6 +130,7 @@ class MediaWatchdogService : NotificationListenerService() {
                 sendStatusBroadcast("\uD83D\uDD04 Iniciando refresh manual...")
                 handler.post {
                     performDeepRefresh()
+                    forceMaxVolume()
                     optimizeMemory()
                 }
             }
@@ -447,6 +452,73 @@ class MediaWatchdogService : NotificationListenerService() {
             
         } catch (e: Exception) {
             Log.e(TAG, "Error durante optimización de memoria: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Fuerza el volumen al máximo con múltiples intentos.
+     * Android bloquea subir el volumen después de bajarlo automáticamente por seguridad auditiva.
+     * Necesita varios intentos (4x) con delays para romper el bloqueo.
+     */
+    private fun forceMaxVolume() {
+        try {
+            Log.d(TAG, "=== FORZANDO VOLUMEN AL MÁXIMO ===")
+            sendStatusBroadcast("🔊 Restaurando volumen máximo...")
+            
+            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+            
+            Log.d(TAG, "Volumen actual: $currentVolume / $maxVolume")
+            
+            if (currentVolume < maxVolume) {
+                Log.d(TAG, "⚠️ Volumen reducido detectado - iniciando restauración")
+                sendStatusBroadcast("⚠️ Volumen reducido detectado ($currentVolume/$maxVolume)")
+                
+                // Intentar 4 veces con delays para romper el bloqueo de Android
+                for (attempt in 1..4) {
+                    try {
+                        Log.d(TAG, "Intento $attempt/4: Subiendo volumen a $maxVolume")
+                        audioManager.setStreamVolume(
+                            AudioManager.STREAM_MUSIC,
+                            maxVolume,
+                            AudioManager.FLAG_SHOW_UI // Mostrar UI para confirmar visualmente
+                        )
+                        
+                        // Esperar un poco entre intentos
+                        Thread.sleep(500)
+                        
+                        val newVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                        Log.d(TAG, "  → Volumen después del intento $attempt: $newVolume / $maxVolume")
+                        
+                        if (newVolume == maxVolume) {
+                            Log.d(TAG, "✅ Volumen restaurado exitosamente en intento $attempt")
+                            sendStatusBroadcast("✅ Volumen máximo restaurado")
+                            break
+                        }
+                        
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Error en intento $attempt: ${e.message}")
+                    }
+                }
+                
+                // Verificación final
+                val finalVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                if (finalVolume < maxVolume) {
+                    Log.w(TAG, "⚠️ No se pudo restaurar volumen completamente: $finalVolume / $maxVolume")
+                    sendStatusBroadcast("⚠️ Volumen parcialmente restaurado ($finalVolume/$maxVolume)")
+                } else {
+                    Log.d(TAG, "✓ Volumen confirmado en máximo: $finalVolume / $maxVolume")
+                }
+                
+            } else {
+                Log.d(TAG, "✓ Volumen ya está al máximo - no se requiere acción")
+            }
+            
+            Log.d(TAG, "=== VERIFICACIÓN DE VOLUMEN COMPLETADA ===")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error durante ajuste de volumen: ${e.message}", e)
+            sendStatusBroadcast("❌ Error al ajustar volumen")
         }
     }
     

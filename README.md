@@ -33,7 +33,7 @@ Esto interrumpe la experiencia de escucha continua, especialmente frustrante cua
 3. **Acción automática**:
    - Si está pausada/detenida → Envía comando de reproducción (`play()`)
    - Si no hay sesión activa → Lanza la aplicación de Apple Music
-4. **Refresh profundo automático cada 15 minutos**: 
+4. **Refresh profundo automático cada 15 minutos**:
    - ⏸️ Pausa la reproducción actual
    - ⏭️ Salta a la siguiente canción
    - ▶️ Reanuda la reproducción
@@ -56,9 +56,9 @@ Esto interrumpe la experiencia de escucha continua, especialmente frustrante cua
    - Icono dinámico mostrando minutos restantes hasta próximo refresh
    - Actualización cada segundo del tiempo en formato MM:SS
    - Subtexto con el último estado/acción ejecutada
-8. **Servicio foreground persistente**: Evita que Android mate el servicio
-9. **Interfaz con countdown**: Visualiza cuándo será el próximo refresh profundo
-10. **Sin intervención del usuario**: Todo funciona en segundo plano de forma transparente
+9. **Servicio foreground persistente**: Evita que Android mate el servicio
+10. **Interfaz con countdown**: Visualiza cuándo será el próximo refresh profundo
+11. **Sin intervención del usuario**: Todo funciona en segundo plano de forma transparente
 
 ### Tecnología Utilizada
 
@@ -258,6 +258,7 @@ Verás mensajes como:
 - `=== OPTIMIZACIÓN COMPLETADA ===`
 
 **Control de volumen:**
+
 - `=== FORZANDO VOLUMEN AL MÁXIMO ===`
 - `Volumen actual: XX / XX`
 - `⚠️ Volumen reducido detectado - iniciando restauración`

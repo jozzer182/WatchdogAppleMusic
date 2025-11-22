@@ -456,9 +456,9 @@ class MediaWatchdogService : NotificationListenerService() {
     }
     
     /**
-     * Fuerza el volumen al máximo con múltiples intentos.
-     * Android bloquea subir el volumen después de bajarlo automáticamente por seguridad auditiva.
-     * Necesita varios intentos (4x) con delays para romper el bloqueo.
+     * Fuerza el volumen al máximo lanzando una Activity transparente.
+     * Android bloquea cambios de volumen desde servicios en segundo plano,
+     * pero permite a Activities en primer plano hacerlo sin restricciones.
      */
     private fun forceMaxVolume() {
         try {
@@ -471,44 +471,31 @@ class MediaWatchdogService : NotificationListenerService() {
             Log.d(TAG, "Volumen actual: $currentVolume / $maxVolume")
             
             if (currentVolume < maxVolume) {
-                Log.d(TAG, "⚠️ Volumen reducido detectado - iniciando restauración")
+                Log.d(TAG, "⚠️ Volumen reducido detectado - lanzando VolumeBoostActivity")
                 sendStatusBroadcast("⚠️ Volumen reducido detectado ($currentVolume/$maxVolume)")
                 
-                // Intentar 4 veces con delays para romper el bloqueo de Android
-                for (attempt in 1..4) {
-                    try {
-                        Log.d(TAG, "Intento $attempt/4: Subiendo volumen a $maxVolume")
-                        audioManager.setStreamVolume(
-                            AudioManager.STREAM_MUSIC,
-                            maxVolume,
-                            AudioManager.FLAG_SHOW_UI // Mostrar UI para confirmar visualmente
-                        )
-                        
-                        // Esperar un poco entre intentos
-                        Thread.sleep(500)
-                        
-                        val newVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-                        Log.d(TAG, "  → Volumen después del intento $attempt: $newVolume / $maxVolume")
-                        
-                        if (newVolume == maxVolume) {
-                            Log.d(TAG, "✅ Volumen restaurado exitosamente en intento $attempt")
-                            sendStatusBroadcast("✅ Volumen máximo restaurado")
-                            break
-                        }
-                        
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Error en intento $attempt: ${e.message}")
-                    }
+                // Lanzar Activity transparente que subirá el volumen
+                // Las Activities en primer plano pueden cambiar el volumen sin restricciones
+                val intent = Intent(this, VolumeBoostActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                    addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
                 }
                 
-                // Verificación final
-                val finalVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-                if (finalVolume < maxVolume) {
-                    Log.w(TAG, "⚠️ No se pudo restaurar volumen completamente: $finalVolume / $maxVolume")
-                    sendStatusBroadcast("⚠️ Volumen parcialmente restaurado ($finalVolume/$maxVolume)")
-                } else {
-                    Log.d(TAG, "✓ Volumen confirmado en máximo: $finalVolume / $maxVolume")
-                }
+                startActivity(intent)
+                Log.d(TAG, "VolumeBoostActivity lanzada - esperando resultado...")
+                
+                // Esperar un poco y verificar
+                handler.postDelayed({
+                    val newVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                    if (newVolume == maxVolume) {
+                        Log.d(TAG, "✅ Volumen restaurado exitosamente: $newVolume / $maxVolume")
+                        sendStatusBroadcast("✅ Volumen máximo restaurado")
+                    } else {
+                        Log.w(TAG, "⚠️ Volumen parcialmente restaurado: $newVolume / $maxVolume")
+                        sendStatusBroadcast("⚠️ Volumen parcialmente restaurado ($newVolume/$maxVolume)")
+                    }
+                }, 3500) // Esperar 3.5 segundos (la Activity se cierra a los 3s)
                 
             } else {
                 Log.d(TAG, "✓ Volumen ya está al máximo - no se requiere acción")

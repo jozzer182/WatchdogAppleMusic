@@ -31,6 +31,17 @@
             </intent-filter>
         </activity>
 
+        <!-- Activity transparente para subir el volumen (requiere estar en primer plano) -->
+        <activity
+            android:name=".VolumeBoostActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Transparent"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
         <!-- Servicio que vigila Apple Music y reanuda reproducción automáticamente -->
         <service
             android:name=".MediaWatchdogService"

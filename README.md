@@ -40,9 +40,11 @@ Esto interrumpe la experiencia de escucha continua, especialmente frustrante cua
    - Esto "despierta" a Apple Music cuando se congela mostrando PLAYING sin audio
 5. **Control automático de volumen cada 15 minutos**:
    - 🔊 Detecta cuando Android baja el volumen automáticamente
-   - 🔁 Realiza 4 intentos automáticos para restaurar el volumen máximo
-   - 🔓 Rompe el bloqueo de protección auditiva de Android
+   - 🪟 Lanza una Activity transparente invisible para subir el volumen
+   - 🔓 Evita las restricciones de Android para servicios en segundo plano
+   - 🔁 Realiza 4 intentos automáticos dentro de la Activity
    - 📢 Mantiene siempre el volumen al máximo para parlantes externos
+   - ⚡ Se auto-cierra en 3 segundos sin interrumpir al usuario
 6. **Refresh manual a demanda**:
    - 🔄 Botón verde para probar el refresh en cualquier momento
    - Feedback visual en tiempo real con Toast messages mostrando cada paso
@@ -283,12 +285,14 @@ Verás mensajes como:
 app/src/main/
 ├── java/com/zarabandajose/watchdogmusic/
 │   ├── MainActivity.kt              # UI con botones y countdown
-│   └── MediaWatchdogService.kt      # Servicio de vigilancia y refresh
+│   ├── MediaWatchdogService.kt      # Servicio de vigilancia y refresh
+│   └── VolumeBoostActivity.kt       # Activity transparente para control de volumen
 ├── res/
 │   ├── layout/
 │   │   └── activity_main.xml        # Layout con CardView y 4 botones
 │   ├── values/
-│   │   └── strings.xml              # Textos en español
+│   │   ├── strings.xml              # Textos en español
+│   │   └── themes_volume.xml        # Tema transparente para VolumeBoostActivity
 │   └── mipmap-*/
 │       ├── ic_launcher.png          # Icono personalizado en todas las resoluciones
 │       └── ic_launcher_round.png    # Icono redondo
@@ -306,6 +310,16 @@ app/src/main/
 - Activity Result Launchers para permisos modernos de Android 14+
 - Verificación continua del estado del servicio
 
+#### VolumeBoostActivity
+
+- Activity completamente transparente (sin interfaz visible)
+- Se lanza automáticamente cuando se detecta volumen reducido
+- Realiza 4 intentos de restauración del volumen con delays de 400ms
+- Utiliza permisos de Activity en primer plano (evita restricciones de servicios)
+- Se auto-cierra después de 3 segundos
+- No aparece en apps recientes ni interrumpe al usuario
+- Configuración especial: `singleInstance`, `noHistory`, `excludeFromRecents`
+
 #### MediaWatchdogService (NotificationListenerService)
 
 **3 Loops principales:**
@@ -319,7 +333,7 @@ app/src/main/
 - `checkAppleMusic()`: Monitoreo del estado de reproducción
 - `handleAppleMusicSession()`: Manejo de 11 estados diferentes de PlaybackState
 - `performDeepRefresh()`: Secuencia pause → skipToNext → play con broadcasts
-- `forceMaxVolume()`: Control de volumen con 4 intentos automáticos para romper bloqueo de Android
+- `forceMaxVolume()`: Lanza VolumeBoostActivity transparente para restaurar volumen
 - `optimizeMemory()`: Limpieza de memoria con estadísticas detalladas
 - `updateCountdownBroadcast()`: Escritura a SharedPreferences + broadcast
 - `updateNotification()`: Actualiza notificación foreground con countdown
